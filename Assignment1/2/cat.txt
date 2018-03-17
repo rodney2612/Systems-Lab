@@ -1,0 +1,4 @@
+Used to concatenate files and print on standard output
+Usage: cat [-n -E] [INPUT FILE(s)] [>/>> OUTPUT_FILE]
+-n : Prints line number at the start of a line
+-E : Prints $ at the end of a line

@@ -1,0 +1,2 @@
+Changes the shell working directory
+Usage: cd [directory_name]

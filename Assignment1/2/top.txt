@@ -1,0 +1,3 @@
+Used to display process statistics
+Usage: top [-n number_of_iterations] [>/>> FILE]
+-n number_of_iterations : When specified, top will print process details number_of_iterations times

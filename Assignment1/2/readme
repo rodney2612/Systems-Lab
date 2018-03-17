@@ -1,0 +1,81 @@
+How to run?
+./run.sh
+A.	my_shell.c
+
+The basic structure of my_shell i.e the main function is as follows:
+while(true){
+	1.printPrompt function :- Prints username, system name and directory name
+	2.getCommand function:- Get command from user using getline function from GNU library
+	3.ParseCommand function :- Separate the command into individual words and store each word in an argument array
+	4.If (command == exit) : then break loop
+	5.isBuiltin and exceBuiltin functions :- if (command is builtin) : execute Builtin command without forking a new 																	   process
+				  processCommand function :- else : fork a new process and run the user entered command using execv system 									 call passing to ithe the command executable and the argument array 									  created in 3rd step
+}
+
+execBuiltin function:
+It just checks whether command is cd or help.
+If cd, then calls chdir system call to change the directory of my_shell process
+if help, reads the help file for the respective command and displays it using printHelp function
+
+processCommand function:
+If user enters cat, it will call execv("cat",arguments)
+cat.c,top.c,mkdir.c are implemented in separate c files and compiled into executables called cat, top and mkdir respectively.
+The above c files dont use inbuilt cat, top or mkdir commands but are implemented using own logic	
+
+
+
+
+B.	cat.c
+
+Supports upto 9 input files and -n, -E options and >,>> redirection operators
+eg. cat f1 f2 > f3 f4 f5 -n f6 f7 f8 f or cat f1 f2 -n > f3 f4 f5 -n f6 f7 f8 or
+cat f1 f2 >> f3 f4 f5 f6 f7 f8 -n all are supported.
+-n and -E options are not yet implemented for the cat >/>> f1 type command
+
+main function :-The main function of cat just separates the arguments passed to it in argument array(via execv call
+ from my_shell) into option array(which includes -n,-E), output file(if user entered > or >>) and input file array and calls either of the following functions:
+
+	1. writeCharByChar function :- called when user executes cat >/>> filename(s). Character by chracter reading and writing is neccesary since we want to detect when user presses CTRL + D character
+
+	2. catForArrayOfFiles function :- Called when user exceutes something other than cat >/>> filename(s) or cat(without any arguments). This function simply reads the input file array in a for loop and in every iteration just writes/appends the input files into the output file(which can be either standard output or the file name given by user after >/>> redirection operators) using writeLineByLine function.
+
+	writeLineByLine function :- Used to write or append an individual input file into an output file Also, it checks wheteher user entered -n or -E argument and supports them if entered.
+
+
+
+C.	mkdir.c
+
+Supports upto 7 directories in 1 go and -v, -p, -m options
+eg. mkdir -v d1 d2 -p d3 d4 -m mode d5 or mkdir d1 d2 d3 d4 d5 -v -p -m mode are supported
+Not typing a number (i.e typing a string of characters) after -m option will give error.
+
+main function :-The main function of mkdir just separates the arguments passed to it in argument array(via execv call
+ from my_shell) into option array(which includes -m,-p, -v) and array of directory names and calls createDirectory function.
+ It also gets the value of mode entered after -m option into a variable.
+ 
+ createDirectory function :-
+ If user entered -p option, then call recursiveCreate
+ else call makeDirectory
+
+ makeDirectory function :- Creates a single directory given directory name and mode
+
+ recursiveCreate function :- Used for -p option of mkdir ex. if user enters mkdir -p f1/f2/f3, this fuction will create the entire structure f1f2/f3.
+This function just creates the first directory in the structure and then parses the directory string to create the 
+subdirectories using the above function makeDirectory to create a single directory in each iteration.
+
+
+
+
+D.	top.c
+
+Supports the -n option and the >,>> redirection operators
+eg. top, top >> f1, top -n num_of_iterations > f1 and top > f1 -n num_of_iterations are supported
+
+main function:
+The main function of top basically gets the output file name and the mode to write to it(if >/>> entered by user) in 2 variables.
+Also if -n option is enterd by user, then it gets the value entered after -n option into another variable.
+Then it runs a loop over the /proc directory and picks the subdirectories whose name consists of numbers(which are pids of processes) and pases this pid to print_status function.
+
+print_status function :- 
+It reads the /proc/pid/statm folder to get values of the memory usage parameters supported by top.
+It then reads the /proc/pid/stat directory to get the other values printed by linux top command.

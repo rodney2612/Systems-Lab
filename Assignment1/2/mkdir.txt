@@ -1,0 +1,5 @@
+Used to create the directories with given directory names
+Usage: mkdir [-m MODE] [-v] [-p] [DIRECTORIES]
+-m MODE : Tells mkdir to create the directory with permissions for users, groups and others as specified by the mode variable
+-v : verbose i.e prints that directory was created when mkdir call was successful
+-p : Used to create a series of directories ex. if user enters mkdir -p /d1/d2/d3, the entire structure d1/d2/d3 will be created in current directory even if directory d1 doesn't exist
