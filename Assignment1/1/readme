@@ -1,0 +1,40 @@
+How to run?
+Run ./prob1.sh filename
+eg ./prob1.sh 1G.txt
+
+Creating files of varying sizes:
+For 1 GB file:
+dd if=/dev/zero of=test-file bs=1GB count=1
+
+For 1 MB file:
+dd if=/dev/zero of=test-file bs=1MB count=1
+
+For 1 KB file:
+dd if=/dev/zero of=test-file bs=1KB count=1
+
+For 500 KB file:
+dd if=/dev/zero of=test-file bs=1KB count=500
+
+For 10 MB file
+dd if=/dev/zero of=test-file bs=1MB count=10
+
+For 150 MB file:
+dd if=/dev/zero of=test-file bs=1MB count=150
+
+For 450 MB file:
+dd if=/dev/zero of=test-file bs=1MB count=450
+
+For 750 MB file:
+dd if=/dev/zero of=test-file bs=1MB count=750
+
+No of Page faults has been counted using 2 techniques:
+1. Using rusage system call
+2. Using perf event open system call(Just so as to verify whether I am getting accurate results using rusage)
+The same values are obtained using both rusage and perf event system calls
+
+Using rusage:
+Main initially counts the no of major and minor page faults using rusage system call
+Then it dioes a file read using mmap via the fileread function.
+Then it again counts the no of major and minor page faults using rusage system call
+The actual no of major page faults for file read is just the difference between the no of major 
+faults before file read and after file read. Same is the case for no of minor page faults.
