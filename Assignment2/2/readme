@@ -1,0 +1,168 @@
+How to run:
+
+1.	Open 2 terminals
+2.	Go to the folder in which the code for the 2nd question is
+3.	./runmmu.sh memtrace_file page_bits offset_bits any_character in the 1st terminal
+4.	./runos.sh page_count frame_count replacement_algorithm any_character in the other terminal 
+Note: Run mmu before os
+
+any_character -> ex 'd','c','s' etc. This character is used to generate a unique key for creating the shared page table using shared memory
+
+queue.c
+
+Contains the standard enqueue and dequeue functions of a queue
+	
+
+fifo.c
+
+fifo():
+	If current size of queue is greater than or equal to capacity of queue(i.e no of frames)
+		remove the oldest entry in the queue using dequeue() -> page replacement
+	Put the currently requested page number into the queue using enqueue()
+
+
+LinkedList.c
+
+	struct Node{
+		int key;//page no
+		long value;//time of last access
+		struct Node *next;
+	}
+
+	insertNode():
+		Given a pointer to pointer to head of linked list along with key and value, inserts the given key(page no) and value(time of page access) into the linked list
+
+	removeNode():
+		Given a pointer to pointer to head of linked list,removes an entry from the linked list
+		Removing an entry from the linked list implies we have deallocated the frame that was allocated to the page no(key) present in the entry
+
+	changeValue():
+		Given a pointer to head of linked list and a key and value, updates the value of the node with the passed key(page no) with the passed value(page accessed again, so store new time)
+
+	getValue():
+		Given a pointer to head of linked list and key, it gets the value associated with the key if key exists else returns -1
+
+	contains():
+		Used to find out whether the linked list contains a node withe the given key(page no)
+
+map.c
+
+	struct unordered_map{
+		struct Node *map[MAP_SIZE];
+		int size;//current no of nodes(page no along with time of last access) stored in the map
+		long page_faults;
+	}	
+
+	put():
+		Given a pointer to a unordered_map with a key,value and frame_count, it does either of the following:
+			1.	insert node with key(page no) and value(time of last access) into one of the map entries if key doesnt exist in the map
+			2.	change value of the node with the given key if a node with the same key(page no) already exists. Also increments no of page faults -> when requested for page already in memory, update time of last access in value field of the node.
+
+	get():
+		Given a pointer to a unordered_map with a key,it returns the value associated with the key
+
+	removeItem():
+		Given a pointer to a unordered_map with a key, removes the node with given key(page no) from the map
+
+	containsItem():
+		Given a pointer to a unordered_map with a key, returns 0 if node with given key exists in the map else returns 1
+
+
+lru.c
+	
+	removeLRUPage():
+		Given a pointer to an unordered_map, it removes the node having the least number in its value field i.e it removes the least recently used page from the map. Also returns the least recently used page no
+
+	lru():
+		Input : unorderd_map, page no, frame count
+		if map size is greater than or equal to frame count
+			if map does not contain the given page no
+				lruPage = removeLRUPage()
+		get current time(seconds since epoch + microseconds since epoch) in a variable say timeSinceEpoch
+		Insert(or update value of node with given page no, in case page is already in memory) a node in the map with given page no as key and timeSinceEpoch as value using put()
+		return lruPage
+
+
+os.c
+
+createSharedPageTable():
+	Creates a shared page table in memory with valid field of all pages set to 0 and frame fields to 1
+
+printPageTable():
+	Prints page table
+
+replacePage():
+	set valid field of page to be replaced to 0
+	if page to be replaced is dirty
+		set its dirty field to 0
+		sleep to simulate disk write
+		Increment disk access counter
+	Allocate frame of the page to be replaced to the page requested by mmu
+
+handlePageRequest():
+	if replacement algorithm passed as argument is fifo
+		replacement_page  = fifo()
+	else
+		replacement_page = lru()
+	if replacement_page = -1 //size of map is still less than frame count
+		Allocate available free frame
+	else
+		replacePage()
+	Sleep to simulate page load
+	Increment disk access counter
+	Set requested field of page to 0 and valid field to 1
+
+handlePageAlreadyInMemory():
+	set requested field of that page to 0
+	Update time of last access of the page in the unordered_map structure
+
+handlePageFault():
+	Wait for SIGUSR1 signal from mmu which indicates a page fault that os needs to handle
+	if requested field of any page is -1
+		handlePageAlreadyInMemory()
+	if requested field of any page is not equal to 0
+		handlePageRequest()
+
+main():
+	Store the replacement algorithm, page count and frame count passed as command line args into variables
+	Store pid of os in a file, say ospid.txt
+	Create shared page table
+	Open file mmu.pid to get pid of mmu
+	while(true){
+		stop = handlePageFault()
+		printPageTable(page_count);
+		if(stop){
+			break;
+		}
+	}
+    Destroy shared page table
+    Print disk access counter
+	
+mmu.c
+
+	hexToBin():
+		Converts given hexadecimal address to binary
+
+	getSharedPageTable():
+		Used to attach to the page table created by os
+
+	handlePageAccess():
+		binary_address = hexToBin()
+		Get page number from binary_address
+		If the valid field of page with above page no is 1
+			Increment page hit counter
+			Set requested field of page to -1 to indicate to os that page is already in memory
+		else
+			Increment page fault counter
+			If page write is requested
+				set dirty field of the page to 1
+			Send SIGUSR1 signal to os to indicate a page fault
+			Wait for SIGCONT signal from os to incidate that page fault is successfully handled
+
+	main():
+		Store pid of mmu in mmupid.txt
+		Attach to shared page table
+		while(memory trace file has more lines){
+			handlePageAccess()
+		}
+		send SIGUSR1 to os to indicate to os that mmu is done with all page requests

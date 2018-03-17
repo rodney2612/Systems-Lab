@@ -1,0 +1,1 @@
+int fifo(struct Queue *queue,int page_no,int frame_count);
