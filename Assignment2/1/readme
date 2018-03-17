@@ -1,0 +1,63 @@
+How to run?
+
+./run.sh directory_name/findError.sh
+directory_name => directory in which findError.sh is stored
+Since creation of daemon changes directory to root(/), so we have to give absolute pathnames
+Eg. In my computer, I run it as ./run.sh /home/rodney/MTech/Sem2/SystemsLab/Assignment2/1/findError.sh
+
+Other files:
+findError.sh => contains a bash script which is used by cronDaemon.c file to check for errors in time fields
+mycrontab file => Contains some crontab entries
+script.sh => contains a bash script which is executed when2nd entry of mycrontab file matches
+catin.txt => this file is used in script.sh
+
+
+matchHyphen():
+	It is used to match time(could be min, hour, month, day or weekday) in the format (number-number).
+
+matchComma():
+	It is used to match time(could be min, hour, month, day or weekday) in the format (number,number...)
+
+tokenise():
+	Given a separtor(- or ,), it separtes the given time(could be min, hour, month, day or weekday) into a string array
+
+match():
+	Uses the above 3 functions to match time(could be min, hour, month, day or weekday) whether it is in the format (number,number...) or (number-number) or (number) or (*)
+
+findError():
+	Used to find errors in time fields using bash script findError.sh eg if user enters a-z in time field
+
+isTimeMatching():
+	It is used to check whether the current time matches with an entry in the crontab file(i.e. the time in argument array).
+	Uses the function match to match individual sub fields of time
+
+getCurrentTime():
+	Retrieves the current time i.e hour, minute, day, month, and weekday name into an integer array and returns it
+
+readFile():
+	Reads the crontab file into a dynamically created array
+
+getFileModifiedTime():
+	Returns the time when the crontab file was last modified
+
+createDaemon():
+	Creates a daemon so that the crontab program can run in the background as no user interaction is needed for cron.
+
+main():
+	Open crontab file ang get its initial modified time using getFileModified()
+	readFile()
+	while(true){
+		Get the current crontab file modified time using getFileModified()
+		If the current file modified time is greater than the previous file modified time{
+			set previous file modified time to current file modified time
+			close crontab file
+			readFile()//read file again into array since file modified
+		}
+		while(argument array has more lines){
+			time = getCurrentTime()
+			separate the words of the line(1 crontab entry) into an array(say arguments)
+			if isTimeMatching(time,arguments)
+				execute the command using system() function
+		}
+		sleep for 60 seconds
+	}

@@ -1,0 +1,4 @@
+* * * * * echo "hi" > /home/rodney/MTech/Sem2/SystemsLab/Assignment2/1/ech.txt
+* * * * * bash /home/rodney/MTech/Sem2/SystemsLab/Assignment2/1/script.sh
+8 22 6 2 1 echo "well" >> /home/rodney/MTech/Sem2/SystemsLab/Assignment2/1/well.txt
+52 21 * * * cat well.txt >> well1.txt
