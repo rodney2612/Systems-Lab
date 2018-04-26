@@ -1,0 +1,24 @@
+create.sh:
+
+Run as sudo ./create.sh
+
+Steps:
+1.	Create namespaces
+2.	Create veth pairs
+3.	Place veths in namespaces
+4.	Set 10 ms delay for each veth using tc
+5.	Associate IP addresses with the created veths
+6.	Bring up the interfaces
+7.	Create bridges
+8.	Assign the appropriate veths to the bridge interfaces
+9.	Bring bridges up
+10.	Ping from one namespace to other and check if they are working fine
+
+cleanup.sh:
+
+Run as sudo ./cleanup.sh
+
+Steps:
+1.	Delete veths
+2.	Bring bridges down and delete them
+3. 	Delete the namespaces 
